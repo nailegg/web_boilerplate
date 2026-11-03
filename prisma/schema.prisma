@@ -1,0 +1,63 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("USER")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  sessions     Session[]
+  records      Record[]
+  jobs         Job[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Record {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  status      String   @default("OPEN")
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  type        String
+  status      String   @default("PENDING")
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  payload     String   @default("{}")
+  result      String?
+  error       String?
+  requestedBy String
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [requestedBy], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([requestedBy])
+}
