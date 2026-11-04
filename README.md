@@ -10,13 +10,21 @@
 - HttpOnly 세션 쿠키와 DB 세션 저장
 - `USER`·`ADMIN` 역할 기반 서버 권한 검사
 - Prisma ORM과 SQLite 데이터베이스
-- 로그인 사용자의 소유권을 적용한 CRUD API
-- 브라우저에서 확인할 수 있는 로그인·회원가입·CRUD·Job 화면
+- 인증·권한 정책을 적용할 수 있는 CRUD API 확장 기반
+- 브라우저에서 확인할 수 있는 로그인·회원가입·작업공간·Job 화면
 - DB 기반 단일 Worker와 Job 상태 관리
 - 실패 Job 자동 재시도와 수동 재시도
 - Playwright 브라우저 테스트
 
-기본 예제의 `Record` 모델과 화면은 CRUD 연결 방식을 보여주는 참고 구현이다. 새 프로젝트에서는 핵심 도메인 모델과 API를 이 구조에 맞춰 교체하거나 추가한다.
+기본 저장소는 특정 업무 도메인을 전제로 하지 않는다. 새 프로젝트에서는 과제의 핵심 리소스와 접근 정책을 판단한 뒤 feature 디렉터리를 추가한다.
+
+## 시작 문서
+
+- [시작하기](docs/START_HERE.md)
+- [과제 적합성 판단](docs/TASK_FIT.md)
+- [기능 추가 방법](docs/INTEGRATION_GUIDE.md)
+- [접근 정책 설계](docs/ACCESS_POLICY_GUIDE.md)
+- [실행 환경](docs/RUNTIME_SETUP.md)
 
 ## 기술 스택과 버전
 
@@ -45,15 +53,14 @@ git clone <repository-url>
 cd WebService_Boilerplate
 pnpm install
 cp .env.example .env
-pnpm db:push
-pnpm db:seed
+pnpm bootstrap
 pnpm dev
 ```
 
 브라우저에서 <http://localhost:3000>을 연다.
 
 - 비로그인 상태의 `/`: `/login`으로 이동
-- 로그인 상태의 `/`: `/records`로 이동
+- 로그인 상태의 `/`: 보호된 시작 화면으로 이동
 - 로그인 후 `/jobs`에서 Job을 생성할 수 있음
 
 Job을 실제로 처리하려면 별도 터미널에서 Worker를 실행한다.
@@ -88,7 +95,7 @@ pnpm db:promote user@example.com
 - 컨테이너를 다시 만들었을 때 DB가 사라지지 않도록 `prisma` 디렉터리를 영속 볼륨으로 둔다.
 - 웹 컨테이너와 Worker 컨테이너는 같은 SQLite 파일을 공유해야 한다.
 
-여러 웹 인스턴스나 여러 Worker를 실행해야 한다면 SQLite 대신 PostgreSQL을 선택하고, Job 큐가 필요할 때 Redis와 BullMQ를 확장한다. 저장소에 있는 `docker-compose.yml`은 이 확장 경로를 위한 참고 설정이며 기본 실행 절차에는 필요하지 않다.
+여러 웹 인스턴스나 여러 Worker를 실행해야 한다면 SQLite 대신 PostgreSQL을 선택하고, Job 큐가 필요할 때 Redis와 BullMQ를 확장한다.
 
 ## 주요 명령
 
@@ -100,10 +107,12 @@ pnpm db:promote user@example.com
 | `pnpm db:generate` | Prisma Client 생성 |
 | `pnpm db:push` | Prisma schema를 현재 DB에 반영 |
 | `pnpm db:migrate` | 마이그레이션 기반 개발 DB 갱신이 필요할 때 사용 |
-| `pnpm db:seed` | 기본 관리자 레코드 생성 |
+| `pnpm db:seed` | 기본 관리자 계정 생성 |
+| `pnpm bootstrap` | DB 반영과 seed를 한 번에 실행 |
 | `pnpm db:promote email` | 기존 사용자를 `ADMIN`으로 승격 |
 | `pnpm worker` | DB 기반 단일 Job Worker 실행 |
 | `pnpm test:e2e` | Playwright Chromium E2E 실행 |
+| `pnpm qa` | build와 E2E를 순서대로 실행 |
 
 Playwright 브라우저가 설치되지 않은 환경에서는 한 번 실행한다.
 
@@ -140,15 +149,15 @@ if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, 
 
 ## DB와 CRUD를 확장하는 방법
 
-1. `prisma/schema.prisma`에 새 모델과 User 관계를 추가한다.
+1. `prisma/schema.prisma`에 과제의 핵심 리소스 모델과 관계를 추가한다.
 2. `pnpm db:push`로 로컬 DB에 반영한다.
-3. `app/api/<resource>/route.ts`에 목록·생성 API를 추가한다.
-4. `app/api/<resource>/[id]/route.ts`에 상세·수정·삭제 API를 추가한다.
-5. 소유권이 필요한 모델은 `ownerId`와 User relation을 추가하고, 조회·수정·삭제마다 현재 사용자의 소유권을 검사한다.
-6. `app/<resource>/page.tsx`에 화면과 폼을 연결한다.
-7. 해당 사용자 흐름을 `tests/e2e`에 추가한다.
+3. `server/<feature>/validation.ts`에 입력 규칙을 둔다.
+4. `server/<feature>/service.ts`에 업무 규칙을 둔다.
+5. `app/api/<feature>/route.ts`와 `[id]/route.ts`에 API를 추가한다.
+6. `app/<feature>/page.tsx`에 화면과 폼을 연결한다.
+7. 과제에 맞는 접근 정책과 E2E 테스트를 추가한다.
 
-기존 `Record` API는 이 패턴의 작동 예시다. 제품 도메인에서는 `Order`, `Reservation`, `Document`처럼 실제 핵심 명사로 모델과 라우트를 만든다.
+소유권이 필요한 리소스에만 `ownerId`를 추가한다. 여러 사용자가 함께 보는 리소스라면 소유권을 강제하지 않고, 역할·조직·공개 범위에 맞는 정책을 별도로 정의한다. 자세한 기준은 [접근 정책 설계](docs/ACCESS_POLICY_GUIDE.md)를 따른다.
 
 ## Job을 확장하는 방법
 
@@ -156,9 +165,9 @@ Job 입력은 `Job.payload`, 결과는 `Job.result`에 문자열 JSON으로 저�
 
 ```ts
 const handlers = {
-  optimize: async (payload, context) => {
-    // 알고리즘, OR 최적화, 파일 처리, 외부 API 동기화
-    return { ...payload, jobId: context.jobId };
+  taskType: async (payload, context) => {
+    // 과제에 필요한 작업을 구현한다.
+    return { payload, jobId: context.jobId };
   }
 };
 ```
@@ -177,7 +186,7 @@ pnpm build
 pnpm test:e2e
 ```
 
-현재 E2E에는 회원가입 후 CRUD를 수행하는 흐름과 비로그인 접근 차단 흐름이 포함되어 있다. Job 변경을 검증할 때는 `pnpm worker`를 별도 실행한 상태에서 API 또는 `/jobs` 화면을 확인한다.
+현재 E2E에는 회원가입 후 보호된 작업공간에 접근하는 흐름과 비로그인 접근 차단 흐름이 포함되어 있다. Job 변경을 검증할 때는 `pnpm worker`를 별도 실행한 상태에서 API 또는 `/jobs` 화면을 확인한다.
 
 ## 배포 전 정리
 

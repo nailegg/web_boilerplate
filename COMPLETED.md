@@ -1,5 +1,28 @@
 # 완료된 구현
 
+## 도메인 placeholder 제거와 공통 기반 정리 — 2026-11-05
+
+- `Record` 모델, 화면, API, 도메인 E2E 제거
+- 로그인 후 이동하는 도메인 중립 작업공간 추가
+- 공통 인증·작업공간 E2E로 테스트 교체
+- Prisma 기본 모델을 User·Session·Job 중심으로 정리
+- 불필요한 Docker Compose 확장 설정 제거
+- 문서 구조와 실제 디렉터리 구조 교차 대조
+- `pnpm db:push --accept-data-loss`, `pnpm db:seed`, `pnpm build`, `pnpm test:e2e` 통과
+
+
+## 범용 과제 적용 문서화 — 2026-11-05
+
+- 특정 도메인 없이 과제 적합성 판단 기준 문서 추가
+- clone 후 실행과 에이전트의 초기 확인 절차 문서 추가
+- feature 단위 이식 방식과 수직 흐름 구현 절차 문서 추가
+- 개인·공유·관리자·조직 데이터 접근 정책 문서 추가
+- SQLite, Worker, Docker 확장 경로 문서 추가
+- README에서 도메인 placeholder 중심 설명을 제거하고 문서 링크 연결
+- `bootstrap`, `qa:build`, `qa:e2e`, `qa` 명령 추가
+- `pnpm build` 통과
+
+
 ## 관리자 테스트 계정과 승격 명령 — 2026-11-02
 
 - seed가 `admin@example.com`을 `ADMIN`으로 만들고 `SEED_ADMIN_PASSWORD`로 비밀번호 설정

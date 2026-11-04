@@ -16,7 +16,6 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   sessions     Session[]
-  records      Record[]
   jobs         Job[]
 }
 
@@ -27,19 +26,6 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
-}
-
-model Record {
-  id          String   @id @default(cuid())
-  title       String
-  description String   @default("")
-  status      String   @default("OPEN")
-  ownerId     String
-  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([ownerId])
 }
 
 model Job {

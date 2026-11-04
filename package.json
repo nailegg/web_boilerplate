@@ -12,7 +12,11 @@
     "db:promote": "tsx prisma/promote-admin.ts",
     "db:push": "prisma db push",
     "worker": "tsx worker/index.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "qa:build": "pnpm build",
+    "qa:e2e": "pnpm test:e2e",
+    "qa": "pnpm qa:build && pnpm qa:e2e",
+    "bootstrap": "pnpm db:push && pnpm db:seed"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
