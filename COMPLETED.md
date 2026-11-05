@@ -1,5 +1,19 @@
 # 완료된 구현
 
+## build와 dev 서버 출력 폴더 분리 — 2026-11-05
+
+- dev 서버 실행 중 같은 폴더에서 `pnpm build`를 하면 `.next`가 덮어써져 dev 서버가 `Cannot find module './NNN.js'`로 500이 되는 문제 확인
+- `next.config.ts`의 `distDir`를 `NEXT_DIST_DIR`로 바꾸고 `build`·`start`가 `.next-build`를 쓰도록 변경, `.gitignore` 추가
+- dev 서버를 띄운 채 build 후 `/login` 200, smoke 7/7 확인
+
+## 2차 검토 반영 — 2026-11-05
+
+- `exam-init.sh`: `--install`(pnpm 확보 + install + bootstrap), 재실행 시 정리 단계 건너뜀, 브라우저 E2E(`tests/`, `playwright.config.ts`) 삭제, 반입 기록에서 시각 제거, `--depth 1` 안내
+- `FEATURE_TEMPLATE.md`: E2E 절을 smoke check 예시로 교체, schema 변경 후 서버 재시작 명시
+- `check-placeholders.sh`: "작업공간"·"Web Service Boilerplate"·Jobs 링크 등 화면 문구 검사 추가
+- 세션 쿠키 `COOKIE_SAMESITE`/`COOKIE_SECURE` 환경변수
+- 복사본에서 템플릿 feature 실체화 → build, smoke 13/13 통과. db:push 후 서버 재시작이 필요함을 확인해 문서화
+
 ## 검토 반영: smoke·반입 안정화 — 2026-11-05
 
 - smoke의 "잘못된 JSON" 검사를 `/api/jobs` 대신 `/api/auth/login`으로 변경 (prune-jobs 후 404로 실패하던 문제)

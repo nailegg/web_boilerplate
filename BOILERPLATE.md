@@ -10,7 +10,7 @@
 | API 가드: `withAuth(handler, { role })` → 401/403, `HttpError` → JSON | `lib/auth/require-user.ts`, `lib/http.ts` |
 | 화면 가드: `requirePageUser("ADMIN")`. `app/(app)/` 아래는 로그인 검사·내비게이션 자동 | `app/(app)/layout.tsx` |
 | 관리자 사용자 목록·역할 변경 | `app/(app)/admin/`, `app/api/admin/users/` |
-| CRUD 수직 흐름 코드 (model·validation·service·API·화면·E2E) | `docs/FEATURE_TEMPLATE.md` |
+| CRUD 수직 흐름 코드 (model·validation·service·API·화면·smoke) | `docs/FEATURE_TEMPLATE.md` |
 | 장시간 작업 Job/Worker | `server/jobs/`, `worker/` |
 | 브라우저 없는 권한 smoke | `scripts/smoke.sh` |
 
@@ -30,8 +30,9 @@
 
 ## 확장 규칙
 
+- 내부 Browser에서 로그인이 반복되면 `.env`에 `COOKIE_SAMESITE="none"`, `COOKIE_SECURE="true"`를 넣고 서버를 재시작한다.
 - 시험 규정상 `git commit`·`git push` 등 git 쓰기 명령은 쓰지 않는다. `web/`에는 `.git`이 없다.
-- 과제 코드 위치: `app/(app)/<feature>/`, `app/api/<feature>/`, `server/<feature>/`, `tests/e2e/<feature>.spec.ts`
+- 과제 코드 위치: `app/(app)/<feature>/`, `app/api/<feature>/`, `server/<feature>/`. 검증은 `scripts/smoke.sh` 하단에 check를 추가한다(브라우저 E2E는 반입 시 삭제됨)
 - 접근 정책은 `server/<feature>/service.ts`에서, 역할 검사는 `withAuth`의 `role`로 한다. 화면에서 버튼만 숨기는 것으로 권한을 구현하지 않는다.
 - 몇 초 안에 끝나는 계산은 API 요청 안에서 동기로 실행하고 결과를 DB에 저장한다. Job은 수십 초 이상 걸릴 때만 쓴다.
 - 제공 데이터는 `prisma/seed.ts` 또는 import 스크립트에서 **파일을 읽어** 적재한다. 값을 코드에 하드코딩하지 않는다.
@@ -43,9 +44,8 @@
 pnpm install --frozen-lockfile
 pnpm bootstrap                    # db push + seed
 pnpm dev                          # 0.0.0.0:3000
-pnpm db:push                      # schema 변경 후
-pnpm build
-pnpm test:e2e                     # Chromium 필요
+pnpm db:push                      # schema 변경 후. 이후 개발 서버 재시작 필수(안 하면 새 모델 API가 500)
+pnpm build                        # .next-build에 출력 → 실행 중인 dev 서버(.next)를 깨뜨리지 않는다
 bash scripts/smoke.sh             # 서버 실행 중, Chromium 불필요
 bash scripts/check-placeholders.sh
 ```

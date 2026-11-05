@@ -8,9 +8,8 @@
 
 ```bash
 cd <과제 루트>                                   # 과제 README·데이터가 있는 곳
-git clone https://github.com/nailegg/web_boilerplate.git web
-bash web/scripts/exam-init.sh                     # web/.git·AGENTS.md 삭제, DECISIONS.md에 출처 기록 (git commit 없음)
-cd web && pnpm install --frozen-lockfile && pnpm bootstrap
+git clone --depth 1 https://github.com/nailegg/web_boilerplate.git web
+bash web/scripts/exam-init.sh --install           # 정리 + DECISIONS.md 출처 기록 + install + bootstrap (git commit 없음)
 ```
 
 - 과제 루트에는 `AGENTS.md`(playbook 템플릿)가 하나만 있다. `web/`에는 `AGENTS.md`가 없고 `BOILERPLATE.md`가 기반 코드 안내를 맡는다.

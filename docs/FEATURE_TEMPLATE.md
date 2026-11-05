@@ -1,7 +1,7 @@
 # Feature 템플릿 (검증된 CRUD 수직 흐름)
 
 과제의 첫 리소스를 만들 때 아래 코드를 복사하고 `Item`/`item`/`items`를 과제 리소스 이름으로 바꾼다.
-이 코드는 boilerplate에서 실제로 `pnpm build`와 E2E를 통과한 뒤 문서로 옮겼다. 도메인 예시가 아니라 형식 예시다.
+이 코드는 boilerplate에서 실제로 `pnpm build`와 브라우저 테스트를 통과한 뒤 문서로 옮겼다. 도메인 예시가 아니라 형식 예시다.
 
 접근 정책은 **개인 데이터(소유자 + ADMIN 전체)** 기준이다. 공유 데이터나 관리자만 변경하는 리소스라면 [접근 정책 설계](ACCESS_POLICY_GUIDE.md)에 맞춰 `service.ts`의 조건만 바꾼다.
 
@@ -12,9 +12,9 @@
 | `server/items/service.ts` | 접근 정책과 업무 규칙, 404/403 |
 | `app/api/items/route.ts`, `[id]/route.ts` | `withAuth` + 검증 + 서비스 호출만 |
 | `app/(app)/items/page.tsx` | 로딩·빈 상태·오류 상태를 가진 목록/생성/수정/삭제 화면 |
-| `tests/e2e/items.spec.ts` | 성공 흐름 1개 + 권한·입력 오류 1개 |
+| `scripts/smoke.sh` 하단 | 성공 흐름 1개 + 권한·입력 오류 1개 (curl, 브라우저 불필요) |
 
-반영 후 `pnpm db:push && pnpm build && pnpm test:e2e`. 내비게이션 링크는 `app/(app)/layout.tsx`에 추가한다.
+반영 후 `pnpm db:push` → **개발 서버 재시작** → `pnpm build && bash scripts/smoke.sh`. 브라우저 E2E(`pnpm test:e2e`)는 시험 중 쓰지 않는다. 내비게이션 링크는 `app/(app)/layout.tsx`에 추가한다.
 
 ## prisma/schema.prisma
 
@@ -192,33 +192,16 @@ export default function ItemsPage() {
 }
 ```
 
-## tests/e2e/items.spec.ts
+## scripts/smoke.sh 하단에 추가
 
-```ts
-import { expect, test } from "@playwright/test";
+`$TMP/user`는 smoke 앞부분에서 가입한 일반 사용자 쿠키다. 다른 사용자 데이터 차단을 보려면 사용자를 하나 더 가입시킨다.
 
-test("항목을 생성·상태 변경·삭제한다", async ({ page }) => {
-  const email = `items-${Date.now()}@example.com`;
-  expect((await page.request.post("/api/auth/register", { data: { email, password: "password123", name: "Items" } })).status()).toBe(201);
-
-  await page.goto("/items");
-  await page.getByLabel("제목").fill("첫 항목");
-  await page.getByRole("button", { name: "추가" }).click();
-  await expect(page.getByRole("cell", { name: "첫 항목" })).toBeVisible();
-  await page.getByRole("button", { name: "OPEN", exact: true }).click();
-  await expect(page.getByRole("button", { name: "DONE", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "삭제" }).click();
-  await expect(page.getByText("항목이 없습니다.")).toBeVisible();
-});
-
-test("다른 사용자의 항목은 403, 잘못된 입력은 400", async ({ page, playwright }) => {
-  const owner = await playwright.request.newContext({ baseURL: "http://127.0.0.1:3000" });
-  await owner.post("/api/auth/register", { data: { email: `owner-${Date.now()}@example.com`, password: "password123" } });
-  const { item } = await (await owner.post("/api/items", { data: { title: "비공개" } })).json();
-  await owner.dispose();
-
-  await page.request.post("/api/auth/register", { data: { email: `other-${Date.now()}@example.com`, password: "password123" } });
-  expect((await page.request.get(`/api/items/${item.id}`)).status()).toBe(403);
-  expect((await page.request.post("/api/items", { data: { title: "" } })).status()).toBe(400);
-});
+```bash
+check "항목 생성"                 201 -b "$TMP/user" "${JSON[@]}" -d '{"title":"smoke item"}' "$BASE/api/items"
+ITEM_ID="$(sed -E 's/.*"id":"([^"]+)".*/\1/' "$TMP/body")"
+check "항목 목록"                 200 -b "$TMP/user" "$BASE/api/items"
+check "빈 제목은 400"             400 -b "$TMP/user" "${JSON[@]}" -d '{"title":""}' "$BASE/api/items"
+check "비로그인 생성은 401"        401 "${JSON[@]}" -d '{"title":"x"}' "$BASE/api/items"
+check "다른 사용자 가입"           201 -c "$TMP/other" "${JSON[@]}" -d "{\"email\":\"other-$EMAIL\",\"password\":\"password123\"}" "$BASE/api/auth/register"
+check "다른 사용자 항목 조회 403"  403 -b "$TMP/other" "$BASE/api/items/$ITEM_ID"
 ```
