@@ -1,5 +1,17 @@
 # 완료된 구현
 
+## 시험 모드 전환과 관리자 기반 보강 — 2026-11-05
+
+- `AGENTS.md`를 시험 모드로 교체: 과제 README 우선, 가정은 `DECISIONS.md`에 기록하고 진행, boilerplate 개발 규칙은 `docs/MAINTAINING.md`로 이동
+- `scripts/exam-init.sh`: 개발 이력 제거, 출처 명시 baseline 커밋, `.env`·`DECISIONS.md` 생성, pnpm 부재 시 대체 명령 안내
+- `withAuth`·`requirePageUser`·`HttpError`·`readJson` 추가, 기존 API를 래퍼로 전환
+- `app/(app)` 공통 layout: 로그인 검사, 내비게이션, 로그아웃
+- `/admin` 사용자 관리 화면과 역할 변경 API (`PATCH /api/admin/users/:id`, 자기 자신 변경 차단)
+- `docs/FEATURE_TEMPLATE.md`: 실제 build·E2E를 통과한 CRUD 수직 흐름 코드
+- RBAC E2E 5개와 브라우저 없는 `scripts/smoke.sh` 추가
+- 의존성 정확한 버전 고정, `packageManager` 지정, dev 서버 `0.0.0.0` 바인딩, Next dev 표시기 비활성화
+- `pnpm build`, `pnpm test:e2e` 7개, `pnpm smoke` 7개 통과
+
 ## 도메인 placeholder 제거와 공통 기반 정리 — 2026-11-05
 
 - `Record` 모델, 화면, API, 도메인 E2E 제거

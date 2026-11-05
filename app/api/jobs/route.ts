@@ -1,21 +1,18 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth/session";
+import { withAuth } from "@/lib/auth/require-user";
+import { readJson } from "@/lib/http";
 
-export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+export const GET = withAuth(async (_request, user) => {
   const jobs = await db.job.findMany({ where: user.role === "ADMIN" ? undefined : { requestedBy: user.id }, orderBy: { createdAt: "desc" } });
   return NextResponse.json({ jobs });
-}
+});
 
-export async function POST(request: Request) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
-  const body = await request.json();
+export const POST = withAuth(async (request, user) => {
+  const body = await readJson(request);
   const type = String(body.type ?? "example");
   const payload = body.payload && typeof body.payload === "object" ? body.payload : {};
   const maxAttempts = Math.min(Math.max(Number(body.maxAttempts ?? 3), 1), 5);
   const job = await db.job.create({ data: { type, payload: JSON.stringify(payload), maxAttempts, requestedBy: user.id } });
   return NextResponse.json({ job }, { status: 201 });
-}
+});

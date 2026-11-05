@@ -2,10 +2,10 @@
 
 ## 기본 원칙
 
-공통 기반은 인증·세션·DB 연결·권한 검사·Job 실행처럼 여러 과제에서 반복되는 기능만 제공한다. 과제별 업무 규칙은 feature 디렉터리에 둔다.
+공통 기반은 인증·세션·DB 연결·권한 검사·Job 실행처럼 여러 과제에서 반복되는 기능만 제공한다. 과제별 업무 규칙은 feature 디렉터리에 둔다. 첫 리소스는 [Feature 템플릿](FEATURE_TEMPLATE.md)을 복사해 시작한다.
 
 ```text
-app/<feature>/page.tsx
+app/(app)/<feature>/page.tsx          로그인 필요 화면 (내비게이션 자동 포함)
 app/api/<feature>/route.ts
 app/api/<feature>/[id]/route.ts
 server/<feature>/service.ts
@@ -13,44 +13,45 @@ server/<feature>/validation.ts
 tests/e2e/<feature>.spec.ts
 ```
 
+## 인증·권한 도구
+
+| 위치 | 도구 | 동작 |
+|---|---|---|
+| Route Handler | `withAuth(handler)` | 비로그인 401, `HttpError`를 JSON 응답으로 변환 |
+| Route Handler | `withAuth(handler, { role: "ADMIN" })` | 일반 사용자 403 |
+| Server Component | `requirePageUser()` / `requirePageUser("ADMIN")` | 비로그인은 `/login`, 역할 불일치는 `/dashboard`로 이동 |
+| 서비스·검증 | `throw new HttpError(status, message)` | 400/403/404/409를 응답으로 변환 |
+| 요청 본문 | `readJson(request)` | 잘못된 JSON은 400 |
+
+```ts
+export const GET = withAuth(async (_request, user) => NextResponse.json({ items: await listItems(user) }));
+export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(async (request, user, { params }) => { ... }, { role: "ADMIN" });
+```
+
+새 역할이 필요하면 `Role` 타입과 `requireAdmin`/`requirePageUser`의 검사, 관리자 화면의 선택지를 함께 바꾼다.
+
 ## 수직 흐름 우선
 
-새 기능은 다음 흐름 하나를 먼저 끝낸다.
-
 ```text
-로그인
-→ 핵심 입력
-→ 서버 검증
-→ 저장 또는 작업 실행
-→ 결과 조회
+로그인 → 핵심 입력 → 서버 검증 → 저장 또는 계산 → 결과 조회
 ```
 
 이 흐름이 브라우저에서 동작한 뒤 검색, 필터, 통계, 고급 UI를 추가한다.
 
-## 데이터 모델 추가
+## 계산과 Job
 
-1. `prisma/schema.prisma`에 필요한 모델과 관계를 추가한다.
-2. `pnpm db:push`로 로컬 DB에 반영한다.
-3. `server/<feature>/validation.ts`에 입력 규칙을 둔다.
-4. `server/<feature>/service.ts`에 업무 규칙을 둔다.
-5. Route Handler는 인증·입력 검증·서비스 호출·응답 변환만 담당한다.
-6. 화면은 API와 연결하고 로딩·빈 상태·오류 상태를 처리한다.
-
-## Job 추가
-
-시간이 오래 걸리는 작업은 요청에서 직접 계산하지 않고 Job을 생성한다.
+몇 초 안에 끝나는 계산(최적화 baseline, 집계 등)은 API 요청 안에서 동기로 실행하고 결과를 DB에 저장한다. Worker 터미널이 하나 더 필요하기 때문에 Job은 수십 초 이상 걸리거나 재시도가 필요할 때만 쓴다.
 
 1. Job 입력 형식을 정의한다.
 2. `server/jobs/registry.ts`에 handler를 등록한다.
-3. Job 결과와 실패 형식을 정의한다.
-4. Worker를 실행해 상태 변화를 확인한다.
-5. 성공·실패·재시도 E2E를 추가한다.
+3. `pnpm worker`를 실행해 상태 변화를 확인한다.
 
 ## 검증
 
 ```bash
 pnpm build
-pnpm test:e2e
+pnpm test:e2e      # Chromium을 설치할 수 없으면 아래 smoke로 대체
+bash scripts/smoke.sh
 ```
 
-기능마다 최소 한 개의 성공 흐름과 한 개의 권한 또는 입력 오류 흐름을 남긴다.
+기능마다 최소 한 개의 성공 흐름과 한 개의 권한 또는 입력 오류 흐름을 남긴다. `scripts/smoke.sh` 하단에 과제 API 확인을 같은 형식으로 추가한다.

@@ -8,13 +8,14 @@
 
 - 이메일·비밀번호 회원가입, 로그인, 로그아웃
 - HttpOnly 세션 쿠키와 DB 세션 저장
-- `USER`·`ADMIN` 역할 기반 서버 권한 검사
+- `USER`·`ADMIN` 역할 기반 서버 권한 검사 (`withAuth`, `requirePageUser`)
+- 상단 내비게이션, 로그아웃, 관리자 사용자 관리 화면(역할 변경)
 - Prisma ORM과 SQLite 데이터베이스
 - 인증·권한 정책을 적용할 수 있는 CRUD API 확장 기반
 - 브라우저에서 확인할 수 있는 로그인·회원가입·작업공간·Job 화면
 - DB 기반 단일 Worker와 Job 상태 관리
 - 실패 Job 자동 재시도와 수동 재시도
-- Playwright 브라우저 테스트
+- Playwright 브라우저 테스트(인증·RBAC·소유권)와 브라우저 없는 `scripts/smoke.sh`
 
 기본 저장소는 특정 업무 도메인을 전제로 하지 않는다. 새 프로젝트에서는 과제의 핵심 리소스와 접근 정책을 판단한 뒤 feature 디렉터리를 추가한다.
 
@@ -23,8 +24,10 @@
 - [시작하기](docs/START_HERE.md)
 - [과제 적합성 판단](docs/TASK_FIT.md)
 - [기능 추가 방법](docs/INTEGRATION_GUIDE.md)
+- [Feature 템플릿 (검증된 CRUD 코드)](docs/FEATURE_TEMPLATE.md)
 - [접근 정책 설계](docs/ACCESS_POLICY_GUIDE.md)
 - [실행 환경](docs/RUNTIME_SETUP.md)
+- [Boilerplate 유지보수 규칙](docs/MAINTAINING.md)
 
 ## 기술 스택과 버전
 
@@ -48,9 +51,11 @@
 
 필요한 것은 Node.js 20 이상과 pnpm이다. 기본 구성은 SQLite 파일을 사용하므로 PostgreSQL, Redis, Docker가 없어도 실행된다.
 
+시험 환경에서는 [시작하기](docs/START_HERE.md)의 반입 절차(`scripts/exam-init.sh`)를 따른다. 일반 로컬 실행은 다음과 같다.
+
 ```bash
-git clone <repository-url>
-cd WebService_Boilerplate
+git clone https://github.com/nailegg/web_boilerplate.git
+cd web_boilerplate
 pnpm install
 cp .env.example .env
 pnpm bootstrap
@@ -66,7 +71,6 @@ pnpm dev
 Job을 실제로 처리하려면 별도 터미널에서 Worker를 실행한다.
 
 ```bash
-cd WebService_Boilerplate
 pnpm worker
 ```
 
@@ -112,6 +116,7 @@ pnpm db:promote user@example.com
 | `pnpm db:promote email` | 기존 사용자를 `ADMIN`으로 승격 |
 | `pnpm worker` | DB 기반 단일 Job Worker 실행 |
 | `pnpm test:e2e` | Playwright Chromium E2E 실행 |
+| `pnpm smoke` | 실행 중인 서버에 curl로 인증·RBAC smoke 검사 |
 | `pnpm qa` | build와 E2E를 순서대로 실행 |
 
 Playwright 브라우저가 설치되지 않은 환경에서는 한 번 실행한다.
@@ -123,29 +128,32 @@ pnpm exec playwright install chromium
 ## 디렉터리 역할
 
 ```text
-app/                    Next.js 화면과 API Route Handler
-components/             공통 UI 컴포넌트 확장 위치
+app/(app)/              로그인 필요 화면 (내비게이션·로그인 검사 공통 layout)
+app/api/                API Route Handler
+components/             공통 UI 컴포넌트
+lib/http.ts             HttpError, 오류 응답, JSON 본문 파싱
 lib/db.ts               Prisma Client 싱글턴
 lib/auth/               비밀번호, 세션, 권한 검사
 server/                 도메인 서비스와 Job handler
 worker/index.ts         단일 Job Worker 진입점
 prisma/schema.prisma    데이터 모델과 관계
 prisma/seed.ts          초기 데이터
-tests/e2e/             브라우저 E2E 테스트
+tests/e2e/              브라우저 E2E 테스트
+scripts/                exam-init.sh, smoke.sh
 ```
 
 ## 인증과 권한을 확장하는 방법
 
 인증은 `lib/auth/password.ts`에서 Node 기본 `crypto` 기반으로 비밀번호를 해시하고, `lib/auth/session.ts`에서 Session 레코드와 HttpOnly 쿠키를 관리한다.
 
-새로운 보호 API는 다음 흐름으로 만든다.
+보호 API는 `withAuth`로 감싼다. 비로그인은 401, 역할 불일치는 403, 서비스에서 던진 `HttpError`는 해당 상태 코드의 JSON 응답이 된다.
 
 ```ts
-const user = await getCurrentUser();
-if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+export const GET = withAuth(async (_request, user) => NextResponse.json({ user }));
+export const DELETE = withAuth(async () => { ... }, { role: "ADMIN" });
 ```
 
-관리자 전용 API는 `requireAdmin()`을 사용한다. 역할을 추가하거나 권한 체계를 세분화할 때는 `User.role`과 `lib/auth/require-user.ts`를 함께 변경한다.
+화면은 `app/(app)/` 아래에 두면 로그인 검사와 내비게이션이 적용된다. 관리자 전용 화면은 page에서 `requirePageUser("ADMIN")`을 호출한다. 역할을 추가할 때는 `User.role`, `lib/auth/require-user.ts`, `app/(app)/admin`을 함께 변경한다.
 
 ## DB와 CRUD를 확장하는 방법
 
@@ -154,7 +162,9 @@ if (!user) return NextResponse.json({ error: "로그인이 필요합니다." }, 
 3. `server/<feature>/validation.ts`에 입력 규칙을 둔다.
 4. `server/<feature>/service.ts`에 업무 규칙을 둔다.
 5. `app/api/<feature>/route.ts`와 `[id]/route.ts`에 API를 추가한다.
-6. `app/<feature>/page.tsx`에 화면과 폼을 연결한다.
+6. `app/(app)/<feature>/page.tsx`에 화면과 폼을 연결한다.
+
+전체 코드 예시는 [Feature 템플릿](docs/FEATURE_TEMPLATE.md)에 있다.
 7. 과제에 맞는 접근 정책과 E2E 테스트를 추가한다.
 
 소유권이 필요한 리소스에만 `ownerId`를 추가한다. 여러 사용자가 함께 보는 리소스라면 소유권을 강제하지 않고, 역할·조직·공개 범위에 맞는 정책을 별도로 정의한다. 자세한 기준은 [접근 정책 설계](docs/ACCESS_POLICY_GUIDE.md)를 따른다.
@@ -186,7 +196,7 @@ pnpm build
 pnpm test:e2e
 ```
 
-현재 E2E에는 회원가입 후 보호된 작업공간에 접근하는 흐름과 비로그인 접근 차단 흐름이 포함되어 있다. Job 변경을 검증할 때는 `pnpm worker`를 별도 실행한 상태에서 API 또는 `/jobs` 화면을 확인한다.
+현재 E2E는 보호 화면 접근, 비로그인 차단, 관리자 API 401/403/200, 관리자 화면 차단과 역할 변경, 다른 사용자 Job 403, 로그아웃을 확인한다. Chromium을 설치할 수 없는 환경에서는 서버 실행 후 `pnpm smoke`를 쓴다. Job 변경을 검증할 때는 `pnpm worker`를 별도 실행한 상태에서 API 또는 `/jobs` 화면을 확인한다.
 
 ## 배포 전 정리
 
