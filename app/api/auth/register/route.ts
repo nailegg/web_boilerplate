@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
+import { errorResponse, readJson } from "@/lib/http";
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try { body = await readJson(request); } catch (error) { return errorResponse(error); }
   const email = String(body.email ?? "").trim().toLowerCase();
   const password = String(body.password ?? "");
   const name = String(body.name ?? email.split("@")[0]).trim();

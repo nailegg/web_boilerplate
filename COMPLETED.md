@@ -1,5 +1,14 @@
 # 완료된 구현
 
+## 검토 반영: smoke·반입 안정화 — 2026-11-05
+
+- smoke의 "잘못된 JSON" 검사를 `/api/jobs` 대신 `/api/auth/login`으로 변경 (prune-jobs 후 404로 실패하던 문제)
+- `login`·`register`가 잘못된 JSON에 500 대신 400 반환
+- smoke 관리자 이메일을 `ADMIN_EMAIL` 변수로 분리
+- `package.json`에 `pnpm.onlyBuiltDependencies` 추가: cold install에서 `approve-builds` 경고 제거 확인
+- `exam-init.sh`: 위치 검사(이중 디렉터리·루트 AGENTS.md 부재 시 중단), `README.md`와 시험에 불필요한 docs 삭제
+- 복사본에서 반입 → prune 전후 smoke 7/7, build, E2E 7개 통과
+
 ## 시험 규정 반영: git commit·push 제거 — 2026-11-05
 
 - `exam-init.sh`에서 git init·add·commit 제거. `web/.git` 삭제 후 반입 출처를 과제 루트 `DECISIONS.md`에 한 줄 기록
