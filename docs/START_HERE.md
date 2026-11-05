@@ -9,7 +9,7 @@
 ```bash
 cd <과제 루트>                                   # 과제 README·데이터가 있는 곳
 git clone https://github.com/nailegg/web_boilerplate.git web
-bash web/scripts/exam-init.sh                     # web/AGENTS.md 삭제, DECISIONS.md, baseline 커밋
+bash web/scripts/exam-init.sh                     # web/.git·AGENTS.md 삭제, DECISIONS.md에 출처 기록 (git commit 없음)
 cd web && pnpm install --frozen-lockfile && pnpm bootstrap
 ```
 

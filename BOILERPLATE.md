@@ -30,6 +30,7 @@
 
 ## 확장 규칙
 
+- 시험 규정상 `git commit`·`git push` 등 git 쓰기 명령은 쓰지 않는다. `web/`에는 `.git`이 없다.
 - 과제 코드 위치: `app/(app)/<feature>/`, `app/api/<feature>/`, `server/<feature>/`, `tests/e2e/<feature>.spec.ts`
 - 접근 정책은 `server/<feature>/service.ts`에서, 역할 검사는 `withAuth`의 `role`로 한다. 화면에서 버튼만 숨기는 것으로 권한을 구현하지 않는다.
 - 몇 초 안에 끝나는 계산은 API 요청 안에서 동기로 실행하고 결과를 DB에 저장한다. Job은 수십 초 이상 걸릴 때만 쓴다.

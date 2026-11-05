@@ -1,5 +1,10 @@
 # 완료된 구현
 
+## 시험 규정 반영: git commit·push 제거 — 2026-11-05
+
+- `exam-init.sh`에서 git init·add·commit 제거. `web/.git` 삭제 후 반입 출처를 과제 루트 `DECISIONS.md`에 한 줄 기록
+- `BOILERPLATE.md`, `docs/START_HERE.md`에 git 쓰기 명령 금지 반영
+
 ## 단일 AGENTS.md 반입 구조와 placeholder 관리 — 2026-11-05
 
 - `AGENTS.md`는 boilerplate 유지보수 규칙으로 되돌리고 `exam-init.sh`가 시험 시 삭제. 시험 중 에이전트 안내는 `BOILERPLATE.md`
