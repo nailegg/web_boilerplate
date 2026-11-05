@@ -8,6 +8,7 @@ export default async function AppLayout({ children }: Readonly<{ children: React
   return (
     <>
       <header className="nav">
+        {/* BOILERPLATE-PLACEHOLDER: 과제 화면 링크로 교체한다. */}
         <nav>
           <Link href="/dashboard">작업공간</Link>
           <Link href="/jobs">Jobs</Link>

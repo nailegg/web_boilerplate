@@ -1,5 +1,13 @@
 # 완료된 구현
 
+## 단일 AGENTS.md 반입 구조와 placeholder 관리 — 2026-11-05
+
+- `AGENTS.md`는 boilerplate 유지보수 규칙으로 되돌리고 `exam-init.sh`가 시험 시 삭제. 시험 중 에이전트 안내는 `BOILERPLATE.md`
+- `exam-init.sh`: 과제 루트를 git 저장소로 두고 `web/`만 baseline 커밋, 루트 `DECISIONS.md` 생성, 루트 `AGENTS.md` 부재 경고
+- 교체 대상 예시 코드에 `BOILERPLATE-PLACEHOLDER` 표시, `scripts/check-placeholders.sh` 추가
+- `scripts/prune-jobs.mjs`: Job 화면·API·Worker·모델·테스트 일괄 삭제
+- Job 소유권 테스트를 `tests/e2e/jobs.spec.ts`로 분리
+
 ## 시험 모드 전환과 관리자 기반 보강 — 2026-11-05
 
 - `AGENTS.md`를 시험 모드로 교체: 과제 README 우선, 가정은 `DECISIONS.md`에 기록하고 진행, boilerplate 개발 규칙은 `docs/MAINTAINING.md`로 이동

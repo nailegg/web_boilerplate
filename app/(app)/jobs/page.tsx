@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+// BOILERPLATE-PLACEHOLDER: Job이 필요 없으면 node scripts/prune-jobs.mjs, 필요하면 과제 화면으로 교체한다.
 type Job = { id: string; type: string; status: string; result?: string | null; error?: string | null };
 
 export default function JobsPage() {

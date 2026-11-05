@@ -27,7 +27,7 @@
 - [Feature 템플릿 (검증된 CRUD 코드)](docs/FEATURE_TEMPLATE.md)
 - [접근 정책 설계](docs/ACCESS_POLICY_GUIDE.md)
 - [실행 환경](docs/RUNTIME_SETUP.md)
-- [Boilerplate 유지보수 규칙](docs/MAINTAINING.md)
+- [시험 중 에이전트용 안내](BOILERPLATE.md)
 
 ## 기술 스택과 버전
 
@@ -139,7 +139,7 @@ worker/index.ts         단일 Job Worker 진입점
 prisma/schema.prisma    데이터 모델과 관계
 prisma/seed.ts          초기 데이터
 tests/e2e/              브라우저 E2E 테스트
-scripts/                exam-init.sh, smoke.sh
+scripts/                exam-init.sh, smoke.sh, check-placeholders.sh, prune-jobs.mjs
 ```
 
 ## 인증과 권한을 확장하는 방법
