@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const path = (p) => join(root, p);
 
-for (const p of ["app/(app)/jobs", "app/api/jobs", "server/jobs", "worker", "tests/e2e/jobs.spec.ts"]) rmSync(path(p), { recursive: true, force: true });
+for (const p of ["app/(app)/jobs", "app/api/jobs", "server/jobs", "worker", "tests/e2e/jobs.spec.ts", ".next/types"]) rmSync(path(p), { recursive: true, force: true });
 
 function edit(file, transform) {
   if (!existsSync(path(file))) return;

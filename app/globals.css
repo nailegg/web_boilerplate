@@ -1,17 +1,69 @@
+/* 공통 스타일. 새 CSS 프레임워크를 넣지 않고 아래 변수와 클래스를 쓴다. 사용법은 BOILERPLATE.md "화면 규칙". */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --border: #e2e8f0; --text: #0f172a; --muted: #64748b;
+  --primary: #1d4ed8; --primary-soft: #dbeafe;
+  --ok: #166534; --ok-soft: #dcfce7; --warn: #92400e; --warn-soft: #fef3c7;
+  --danger: #b91c1c; --danger-soft: #fee2e2; --neutral: #334155; --neutral-soft: #e2e8f0;
+  --radius: 10px; --gap: 16px;
+}
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
-body { background: #f8fafc; color: #0f172a; font-family: Arial, sans-serif; }
-main { max-width: 960px; margin: 0 auto; padding: 48px 24px; }
-.card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 16px rgba(15, 23, 42, .05); }
-.badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 700; }
+body { background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", Arial, sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; display: grid; gap: var(--gap); align-content: start; }
+main.wide { max-width: 1280px; }
+h1 { font-size: 22px; margin: 0 0 8px; } h2 { font-size: 17px; margin: 0 0 8px; } p { margin: 0 0 8px; }
+a { color: var(--primary); text-decoration: none; } a:hover { text-decoration: underline; }
+.muted { color: var(--muted); font-size: 13px; }
+
+/* 틀 */
+.nav { display: flex; justify-content: space-between; align-items: center; gap: var(--gap); padding: 10px 24px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+.nav nav, .nav-user { display: flex; align-items: center; gap: var(--gap); }
+.nav nav a { color: var(--text); font-weight: 600; }
+.page-head { display: flex; justify-content: space-between; align-items: center; gap: var(--gap); flex-wrap: wrap; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.grid { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 1px 3px rgba(15, 23, 42, .05); }
+
+/* 핵심 숫자 타일: <div class="kpi"><span class="label">…</span><strong>…</strong><span class="muted">…</span></div> */
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: grid; gap: 2px; }
+.kpi .label { color: var(--muted); font-size: 13px; }
+.kpi strong { font-size: 26px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+
+/* 상태 배지: 기본은 ok. warn, danger, neutral, info를 덧붙인다 */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.danger { background: var(--danger-soft); color: var(--danger); }
+.badge.neutral { background: var(--neutral-soft); color: var(--neutral); }
+.badge.info { background: var(--primary-soft); color: var(--primary); }
+
+/* 폼과 버튼 */
 form { display: grid; gap: 12px; max-width: 420px; }
-input, button, select, textarea { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font: inherit; }
-button { background: #0f172a; color: white; cursor: pointer; }
-button.secondary { background: white; color: #0f172a; }
-a { color: #2563eb; }
-.nav { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 24px; background: white; border-bottom: 1px solid #e2e8f0; }
-.nav nav, .nav-user { display: flex; align-items: center; gap: 16px; }
-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #e2e8f0; }
-th { color: #475569; font-size: 14px; }
-[role="alert"] { color: #b91c1c; }
+form.inline { display: flex; align-items: end; gap: 8px; flex-wrap: wrap; max-width: none; }
+label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+input, button, select, textarea { border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font: inherit; background: var(--surface); color: var(--text); }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+button { background: var(--text); border-color: var(--text); color: white; cursor: pointer; font-weight: 600; }
+button:hover { opacity: .9; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.secondary { background: var(--surface); color: var(--text); border-color: #cbd5e1; }
+button.danger { background: var(--danger); border-color: var(--danger); }
+
+/* 표: 숫자 칸은 class="num", 넓은 표는 .table-wrap으로 감싼다 */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
+tbody tr:hover { background: #f8fafc; }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* 상태 안내 */
+[role="alert"] { color: var(--danger); }
+.notice { padding: 10px 12px; border-radius: 8px; background: var(--primary-soft); color: var(--primary); }
+.notice.warn { background: var(--warn-soft); color: var(--warn); }
+.notice.danger { background: var(--danger-soft); color: var(--danger); }
+.empty { padding: 32px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius); }
+
+/* 막대: <div class="bar" style="--v:72"></div>. --v는 0~100. 색은 warn, danger로 바꾼다 */
+.bar { height: 8px; min-width: 80px; border-radius: 999px; background: var(--neutral-soft); overflow: hidden; }
+.bar::after { content: ""; display: block; height: 100%; width: calc(var(--v, 0) * 1%); background: var(--primary); }
+.bar.warn::after { background: #d97706; } .bar.danger::after { background: var(--danger); }

@@ -36,7 +36,17 @@
 - 접근 정책은 `server/<feature>/service.ts`에서, 역할 검사는 `withAuth`의 `role`로 한다. 화면에서 버튼만 숨기는 것으로 권한을 구현하지 않는다.
 - 몇 초 안에 끝나는 계산은 API 요청 안에서 동기로 실행하고 결과를 DB에 저장한다. Job은 수십 초 이상 걸릴 때만 쓴다.
 - 제공 데이터는 `prisma/seed.ts` 또는 import 스크립트에서 **파일을 읽어** 적재한다. 값을 코드에 하드코딩하지 않는다.
-- 새 역할이 필요하면 `Role` 타입, `requireAdmin`/`requirePageUser`, 관리자 화면 선택지를 함께 바꾼다.
+- 새 역할이 필요하면 `lib/auth/require-user.ts`의 `Role` 타입, `app/api/admin/users/[id]/route.ts`의 `ROLES`, 관리자 화면 선택지(`RoleSelect`)를 함께 바꾼다. `withAuth(handler, { role })`와 `requirePageUser(role)`는 그 역할이거나 `ADMIN`일 때만 통과시킨다.
+- route를 지우거나 이름을 바꾼 뒤 build가 `.next/types/... Cannot find module`로 실패하면 `rm -rf .next/types` 후 다시 build한다(dev 서버는 계속 돈다).
+
+## 화면 규칙
+
+- 스타일은 `app/globals.css`의 변수와 클래스로 만든다. Tailwind 같은 CSS 프레임워크나 UI 라이브러리를 새로 설치하지 않는다. 필요한 클래스가 없으면 이 파일에 추가하고, 화면마다 인라인 스타일을 길게 쓰지 않는다.
+- 한 화면의 순서는 제목 줄(`.page-head`: 제목과 주요 버튼), 핵심 숫자(`.grid` 안에 `.kpi`), 본문(`.card` 안에 표나 폼)이다. 넓은 표가 있으면 `<main className="wide">`를 쓴다.
+- 상태는 글자만 쓰지 않고 `.badge`로 표시한다. 정상은 기본, 주의 `warn`, 위험·실패 `danger`, 대기·해당 없음 `neutral`, 진행·정보 `info`. 상태 이름은 과제 README의 표기를 그대로 쓴다.
+- 표의 숫자 칸은 `className="num"`, 비율은 `.bar`(`style={{ "--v": 72 } as React.CSSProperties}`), 데이터가 없으면 `.empty`, 요청 실패는 `role="alert"`로 보여 준다.
+- 버튼은 기본(주요 동작), `secondary`(보조), `danger`(삭제·반려)만 쓴다. 한 줄 필터·검색 폼은 `form.inline`이다.
+- 꾸미기는 필수 AC가 통과한 뒤에 한다.
 
 ## 명령
 
@@ -44,6 +54,7 @@
 pnpm install --frozen-lockfile
 pnpm bootstrap                    # db push + seed
 pnpm dev                          # 0.0.0.0:3000
+pnpm worker                       # Job을 쓸 때만, 별도 터미널. 없으면 Job이 PENDING에 머문다
 pnpm db:push                      # schema 변경 후. 이후 개발 서버 재시작 필수(안 하면 새 모델 API가 500)
 pnpm build                        # .next-build에 출력 → 실행 중인 dev 서버(.next)를 깨뜨리지 않는다
 bash scripts/smoke.sh             # 서버 실행 중, Chromium 불필요

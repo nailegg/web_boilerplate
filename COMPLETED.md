@@ -1,5 +1,18 @@
 # 완료된 구현
 
+## 점검 반영: 역할 검사, prune 후 build, worker 안내 — 2026-11-10
+
+- `withAuth`·`requirePageUser`가 `ADMIN`만 검사하던 것을 "요구 역할이거나 ADMIN"으로 일반화. 새 역할을 `Role`에 추가하면 그대로 강제된다
+- `prune-jobs.mjs`가 `.next/types`도 지워 삭제한 route 때문에 build가 실패하지 않게 함
+- `BOILERPLATE.md`: 새 역할 추가 시 바꿀 곳(`ROLES` 포함), `.next/types` 처방, `pnpm worker` 안내
+- `pnpm build` 통과, smoke 7/7 통과, 임시 route로 다른 역할 요구에 일반 사용자 403·관리자 200 확인. `pnpm test:e2e`는 Playwright Chromium 캐시가 지워져 이 변경 뒤에는 끝까지 돌리지 못함(직전 실행은 6개 통과 후 브라우저 실행 파일 없음으로 중단)
+
+## 공통 화면 스타일 보강 — 2026-11-10
+
+- `app/globals.css`에 색·간격 변수, 제목 줄, KPI 타일, 배지 다섯 색, 버튼 세 종류, 한 줄 폼, 숫자 칸 정렬, 빈 상태·안내 상자, CSS 막대 추가. 의존성과 화면 마크업은 그대로
+- `BOILERPLATE.md`에 "화면 규칙" 절 추가(새 CSS 프레임워크 설치 금지, 화면 순서, 상태 배지)
+- `pnpm build` 통과, `pnpm test:e2e` 7/7 통과, 로그인·관리자 화면 육안 확인
+
 ## build와 dev 서버 출력 폴더 분리 — 2026-11-05
 
 - dev 서버 실행 중 같은 폴더에서 `pnpm build`를 하면 `.next`가 덮어써져 dev 서버가 `Cannot find module './NNN.js'`로 500이 되는 문제 확인
